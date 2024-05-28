@@ -19,6 +19,7 @@ class CodeManager:
         if submission_id in self.submissions:
             self.comments[submission_id].append(comment)
         else:
+            # Logging or handling this error could be here if needed
             raise ValueError("Invalid submission ID")
 
     def get_comments(self, submission_id):
@@ -28,6 +29,7 @@ class CodeManager:
         if submission_id in self.submissions:
             self.reviews[submission_id].append(reviewer)
         else:
+            # Logging or handling this error could be here if needed
             raise ValueError("Invalid submission ID")
 
     def get_reviewers(self, submission_id):
@@ -50,13 +52,21 @@ class CodeQualityManager(CodeManager):
             return {"passed": True, "output": result.stdout, "error": result.stderr}
         except subprocess.CalledProcessError as e:
             return {"passed": False, "output": e.stdout, "error": e.stderr}
+        except Exception as ex:
+            # This captures any other unforeseen error during the subprocess execution
+            return {"passed": False, "output": "", "error": str(ex)}
 
 if __name__ == "__main__":
     cm = CodeQualityManager()
-    cm.add_submission('123', 'print("Hello, world!")')
-    cm.add_comment('123', 'Looks good!')
-    cm.add_quality_check('123', 'python -m flake8 submission_123.py')
-    print("Comments for 123:", cm.get_comments('123'))
-    print("Running quality checks for 123...")
-    result = cm.run_quality_checks('123')
-    print(json.dumps(result, indent=2))
+    try:
+        cm.add_submission('123', 'print("Hello, world!")')
+        cm.add_comment('123', 'Looks good!')
+        cm.add_quality_check('123', 'python -m flake8 submission_123.py')
+        print("Comments for 123:", cm.get_comments('123'))
+        print("Running quality checks for 123...")
+        result = cm.run_quality_checks('123')
+        print(json.dumps(result, indent=2))
+    except ValueError as ve:
+        print("An error occurred:", ve)
+    except Exception as e:
+        print("An unexpected error occurred:", str(e))
