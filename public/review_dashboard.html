@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    {% if user_role == 'reviewer' %}
+        <h1>Pending Reviews</h1>
+        <ul>
+            {% for review in pending_reviews %}
+                <li>
+                    <h2>{{ review.title }}</h2>
+                    <p>Submitted by: {{ review.submitter }}</p>
+                    <a href="/review/{{ review.id }}">Review Code</a>
+                </li>
+            {% else %}
+                <p>No pending reviews at the moment.</p>
+            {% endfor %}
+        </ul>
+    {% elif user_role == 'submitter' %}
+        <h1>Submit Code for Review</h1>
+        <form method="post" action="/submit-code">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" required>
+            
+            <label for="code">Code:</label>
+            <textarea id="code" name="code" required></textarea>
+            
+            <label for="language">Language:</label>
+            <select name="language" id="language" required>
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="java">Java</option>
+            </select>
+            <input type="submit" value="Submit">
+        </form>
+        <h1>Your Submissions</h1>
+        <ul>
+            {% for submission in submissions %}
+                <li>
+                    <h2>{{ submission.title }}</h2>
+                    <p>Status: {{ submission.status }}</p>
+                    {% if submission.feedback %}
+                        <p>Feedback: {{ submission.feedback }}</p>
+                    {% endif %}
+                </li>
+            {% else %}
+                <p>You have not submitted any code yet.</p>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h1>Welcome to the Review Dashboard</h1>
+        <p>Please log in to submit or review code.</p>
+    {% endif %}
+</body>
+</html>
