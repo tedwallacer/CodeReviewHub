@@ -1,8 +1,8 @@
 import os
-from dotenv import load_dotenv
-from collections import defaultdict
 import subprocess
 import json
+from collections import defaultdict
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -19,8 +19,7 @@ class CodeManager:
         if submission_id in self.submissions:
             self.comments[submission_id].append(comment)
         else:
-            # Logging or handling this error could be here if needed
-            raise ValueError("Invalid submission ID")
+            raise ValueError(f"Invalid submission ID: {submission_id}")
 
     def get_comments(self, submission_id):
         return self.comments.get(submission_id, [])
@@ -29,16 +28,19 @@ class CodeManager:
         if submission_id in self.submissions:
             self.reviews[submission_id].append(reviewer)
         else:
-            # Logging or handling this error could be here if needed
-            raise ValueError("Invalid submission ID")
+            raise ValueError(f"Invalid submission ID: {submission_id}")
 
     def get_reviewers(self, submission_id):
         return self.reviews.get(submission_id, [])
+
+    def list_all_submissions(self):
+        return [{"id": id, "code_snippet": snippet, "has_review": id in self.reviews} for id, snippet in self.submissions.items()]
 
 class CodeQualityManager(CodeManager):
     def __init__(self):
         super().__init__()
         self.quality_checks = {}
+        self.quality_check_logs = defaultdict(list)
 
     def add_quality_check(self, submission_id, check_command):
         self.quality_checks[submission_id] = check_command
@@ -46,15 +48,28 @@ class CodeQualityManager(CodeManager):
     def run_quality_checks(self, submission_id):
         if submission_id not in self.quality_checks:
             raise ValueError("No quality check command found for this submission ID")
+        
         check_command = self.quality_checks[submission_id]
         try:
             result = subprocess.run(check_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            self.log_quality_check(submission_id, True, result.stdout, result.stderr)
             return {"passed": True, "output": result.stdout, "error": result.stderr}
         except subprocess.CalledProcessError as e:
+            self.log_quality_check(submission_id, False, e.stdout, e.stderr)
             return {"passed": False, "output": e.stdout, "error": e.stderr}
         except Exception as ex:
-            # This captures any other unforeseen error during the subprocess execution
+            self.log_quality_check(submission_id, False, "", str(ex))
             return {"passed": False, "output": "", "error": str(ex)}
+
+    def log_quality_check(self, submission_id, passed, output, error):
+        self.quality_check_logs[submission_id].append({
+            "passed": passed,
+            "output": output,
+            "error": error
+        })
+
+    def get_quality_check_logs(self, submission_id):
+        return self.quality_check_logs.get(submission_id, [])
 
 if __name__ == "__main__":
     cm = CodeQualityManager()
@@ -66,6 +81,8 @@ if __name__ == "__main__":
         print("Running quality checks for 123...")
         result = cm.run_quality_checks('123')
         print(json.dumps(result, indent=2))
+        print("All submissions:", cm.list_all_submissions())
+        print("Quality check logs for 123:", cm.get_quality_check_logs('123'))
     except ValueError as ve:
         print("An error occurred:", ve)
     except Exception as e:
