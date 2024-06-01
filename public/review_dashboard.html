@@ -51,9 +51,37 @@
                 <p>You have not submitted any code yet.</p>
             {% endfor %}
         </ul>
+    {% elif user_role == 'author' %}
+        <h1>Author Page</h1>
+        <p>Welcome, esteemed author! This page is dedicated to showcasing your contributions and engagement within our code community.</p>
+        <h2>Authored Articles</h2>
+        <ul>
+            {% for article in authored_articles %}
+                <li>
+                    <h3>{{ article.title }}</h3>
+                    <p>{{ article.summary }}</p>
+                    <a href="/article/{{ article.id }}">Read More</a>
+                </li>
+            {% else %}
+                <p>No articles published yet.</p>
+            {% endfor %}
+        </ul>
+        <h2>Submit a New Article</h2>
+        <form method="post" action="/submit-article">
+            <label for="article-title">Title:</label>
+            <input type="text" id="article-title" name="title" required>
+            
+            <label for="summary">Summary:</label>
+            <textarea id="summary" name="summary" required></textarea>
+            
+            <label for="content">Content:</label>
+            <textarea id="content" name="content" required></textarea>
+            
+            <input type="submit" value="Submit Article">
+        </form>
     {% else %}
         <h1>Welcome to the Review Dashboard</h1>
-        <p>Please log in to submit or review code.</p>
+        <p>Please log in to submit or review code, or to access your author page.</p>
     {% endif %}
 </body>
 </html>
